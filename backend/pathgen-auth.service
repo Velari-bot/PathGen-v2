@@ -1,0 +1,27 @@
+[Unit]
+Description=PathGen Discord Auth API
+Documentation=https://github.com/yourusername/pathgen
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/PathGen v2/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pathgen-auth
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/PathGen v2/backend
+
+[Install]
+WantedBy=multi-user.target
+
