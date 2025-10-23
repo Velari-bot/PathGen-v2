@@ -3,6 +3,15 @@ import DiscordProvider from 'next-auth/providers/discord'
 import { db } from '@/lib/firebase'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 
+// Discord profile type
+interface DiscordProfile {
+  id: string
+  username: string
+  discriminator: string
+  email?: string
+  image_url?: string
+}
+
 // Debug logging
 console.log('CLIENT ID:', process.env.DISCORD_CLIENT_ID)
 console.log('CLIENT SECRET:', process.env.DISCORD_CLIENT_SECRET ? 'SET' : 'NOT SET')
@@ -23,11 +32,12 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'discord' && profile) {
         try {
-          const discordId = profile.id as string
-          const username = profile.username as string
-          const discriminator = profile.discriminator as string
-          const avatar = profile.image_url as string | undefined
-          const email = profile.email as string | undefined
+          const discordProfile = profile as DiscordProfile
+          const discordId = discordProfile.id
+          const username = discordProfile.username
+          const discriminator = discordProfile.discriminator
+          const avatar = discordProfile.image_url
+          const email = discordProfile.email
 
           const userRef = doc(db, 'users', discordId)
           const userDoc = await getDoc(userRef)
@@ -91,7 +101,8 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, account, profile }) {
       if (account?.provider === 'discord' && profile) {
-        token.sub = profile.id as string
+        const discordProfile = profile as DiscordProfile
+        token.sub = discordProfile.id
         // Check if this is a new user
         if (user) {
           token.isNewUser = true
