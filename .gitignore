@@ -1,24 +1,32 @@
-# Environment variables
+## Databases
+*.db
+*.db-journal
+
+## Dependencies
+node_modules/
+
+## Next.js
+.next/
+out/
+
+## Environment variables
 .env
 .env.local
 .env.production
 .env.development
 
-# Logs
-*.log
-npm-debug.log*
+## IDE
+.vscode/
+.idea/
 
-# Dependencies
-node_modules/
-
-# Build outputs
-dist/
-build/
-
-# OS files
+## OS
 .DS_Store
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
+## Logs
+*.log
+npm-debug.log*
+
+## Build
+dist/
+build/
