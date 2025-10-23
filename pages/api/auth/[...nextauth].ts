@@ -12,6 +12,32 @@ interface DiscordProfile {
   image_url?: string
 }
 
+// Extend NextAuth types
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+      discordId: string
+      username: string
+      discriminator: string | null
+      avatarUrl: string | null
+      email: string | null
+      subscriptionStatus: boolean
+    }
+  }
+
+  interface User {
+    id: string
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    sub?: string
+    isNewUser?: boolean
+  }
+}
+
 // Debug logging
 console.log('CLIENT ID:', process.env.DISCORD_CLIENT_ID)
 console.log('CLIENT SECRET:', process.env.DISCORD_CLIENT_SECRET ? 'SET' : 'NOT SET')
