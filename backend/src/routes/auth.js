@@ -33,16 +33,12 @@ router.get('/discord/callback',
       console.log(`✓ User authenticated: ${req.user.username} (${req.user.id})`);
       
       // Redirect to dashboard
-      const redirectUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://v2.pathgen.online/dashboard' 
-        : 'http://localhost:3000/dashboard';
+      const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000/dashboard';
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('Error during authentication callback:', error);
       // Still redirect even if saving fails
-      const redirectUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://v2.pathgen.online/dashboard' 
-        : 'http://localhost:3000/dashboard';
+      const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000/dashboard';
       res.redirect(redirectUrl);
     }
   }
