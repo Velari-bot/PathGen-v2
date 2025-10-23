@@ -52,30 +52,34 @@ function getReplayService(req) {
 }
 
 // Upload replay
-router.post('/upload', isAuthenticated, upload.single('replay'), async (req, res) => {
+router.post('/upload', upload.single('replay'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const replayService = getReplayService(req);
-    const user = req.user;
+    
+    // Get user info from headers (for desktop apps) or session (for web)
+    const userId = req.headers['x-user-id'] || req.user?.id || 'unknown';
+    const username = req.headers['x-username'] || req.user?.username || 'Anonymous';
+    const userAvatar = req.headers['x-user-avatar'] || req.user?.avatar || '';
 
     const replayData = {
       fileName: req.file.originalname,
       filePath: req.file.path,
       fileSize: req.file.size,
-      userId: user.id,
-      username: user.username,
-      userAvatar: user.avatar,
+      userId,
+      username,
+      userAvatar,
       description: req.body.description || '',
       gameMode: req.body.gameMode || 'Unknown',
       map: req.body.map || 'Unknown',
       duration: req.body.duration || 0,
       uploadedBy: {
-        id: user.id,
-        username: user.username,
-        avatar: user.avatar
+        id: userId,
+        username,
+        avatar: userAvatar
       }
     };
 
