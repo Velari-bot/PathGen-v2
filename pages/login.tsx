@@ -7,7 +7,7 @@ export default function LoginPage() {
 
   const handleDiscordLogin = async () => {
     await signIn('discord', { 
-      callbackUrl: '/dashboard',
+      callbackUrl: '/confirmation',
       redirect: true 
     })
   }
