@@ -1,7 +1,5 @@
 import express from 'express';
 import passport from '../auth/discord.js';
-import fs from 'fs/promises';
-import path from 'path';
 
 const router = express.Router();
 
@@ -11,46 +9,40 @@ router.get('/discord', passport.authenticate('discord'));
 // Discord OAuth callback
 router.get('/discord/callback', 
   passport.authenticate('discord', { 
-    failureRedirect: '/auth/discord',
-    successRedirect: process.env.NODE_ENV === 'production' 
-      ? 'https://v2.pathgen.online' 
-      : 'http://localhost:5173'
+    failureRedirect: '/auth/discord'
   }),
   async (req, res) => {
     try {
-      // Store user data on VPS
+      // Get replay service
+      const replayService = req.app.locals.replayService;
+      
+      // Store user data in Firestore
       const userData = {
         id: req.user.id,
         username: req.user.username,
         email: req.user.email,
         avatar: req.user.avatar,
         banner: req.user.banner,
-        joinedAt: new Date().toISOString(),
-        pricing: 'standard',
-        amount: 49.99
+        discriminator: req.user.discriminator,
+        createdAt: new Date().toISOString()
       };
 
-      // Create users directory if it doesn't exist
-      const usersDir = path.join(process.cwd(), 'data', 'users');
-      await fs.mkdir(usersDir, { recursive: true });
+      // Save to Firestore
+      await replayService.saveUser(userData);
 
-      // Save user data to file
-      const userFile = path.join(usersDir, `${req.user.id}.json`);
-      await fs.writeFile(userFile, JSON.stringify(userData, null, 2));
-
-      console.log(`✓ User data saved: ${req.user.username} (${req.user.id})`);
+      console.log(`✓ User authenticated: ${req.user.username} (${req.user.id})`);
       
-      // Redirect to frontend
+      // Redirect to dashboard
       const redirectUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://v2.pathgen.online' 
-        : 'http://localhost:5173';
+        ? 'https://v2.pathgen.online/dashboard' 
+        : 'http://localhost:3000/dashboard';
       res.redirect(redirectUrl);
     } catch (error) {
-      console.error('Error saving user data:', error);
+      console.error('Error during authentication callback:', error);
       // Still redirect even if saving fails
       const redirectUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://v2.pathgen.online' 
-        : 'http://localhost:5173';
+        ? 'https://v2.pathgen.online/dashboard' 
+        : 'http://localhost:3000/dashboard';
       res.redirect(redirectUrl);
     }
   }
