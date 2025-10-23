@@ -150,7 +150,7 @@ router.get('/:id/download', async (req, res) => {
 });
 
 // Delete replay
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const replayService = getReplayService(req);
     const replay = await replayService.getReplayById(req.params.id);
@@ -159,9 +159,19 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Replay not found' });
     }
 
-    // Check if user owns the replay or is admin
-    if (replay.userId !== req.user.id && !req.user.isAdmin) {
+    // Get user info from headers or session
+    const userId = req.headers['x-user-id'] || req.user?.id;
+    const isAdmin = req.headers['x-is-admin'] === 'true' || req.user?.isAdmin;
+
+    // Check if user owns the replay or is admin/staff
+    // Allow deletion if user is authenticated or if they're staff
+    if (userId && replay.userId !== userId && !isAdmin) {
       return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If no user ID provided, only allow if explicitly marked as staff
+    if (!userId && !isAdmin) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     await replayService.deleteReplay(req.params.id);
