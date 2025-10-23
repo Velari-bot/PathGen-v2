@@ -1,7 +1,3 @@
-## Databases
-*.db
-*.db-journal
-
 ## Dependencies
 node_modules/
 

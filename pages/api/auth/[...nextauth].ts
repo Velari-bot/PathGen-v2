@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import DiscordProvider from 'next-auth/providers/discord'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/firebase'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -24,34 +25,29 @@ export const authOptions: NextAuthOptions = {
           const avatar = profile.image_url as string | undefined
           const email = profile.email as string | undefined
 
-          // Check if user exists
-          const existingUser = await prisma.user.findUnique({
-            where: { discordId }
-          })
+          const userRef = doc(db, 'users', discordId)
+          const userDoc = await getDoc(userRef)
 
-          if (existingUser) {
+          if (userDoc.exists()) {
             // Update existing user
-            await prisma.user.update({
-              where: { discordId },
-              data: {
-                username,
-                discriminator: discriminator || null,
-                avatarUrl: avatar || null,
-                email: email || null,
-                updatedAt: new Date()
-              }
-            })
+            await setDoc(userRef, {
+              username,
+              discriminator: discriminator || null,
+              avatarUrl: avatar || null,
+              email: email || null,
+              updatedAt: new Date()
+            }, { merge: true })
           } else {
             // Create new user
-            await prisma.user.create({
-              data: {
-                discordId,
-                username,
-                discriminator: discriminator || null,
-                avatarUrl: avatar || null,
-                email: email || null,
-                subscriptionStatus: false
-              }
+            await setDoc(userRef, {
+              discordId,
+              username,
+              discriminator: discriminator || null,
+              avatarUrl: avatar || null,
+              email: email || null,
+              subscriptionStatus: false,
+              createdAt: new Date(),
+              updatedAt: new Date()
             })
           }
 
@@ -65,20 +61,24 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token.sub) {
-        const user = await prisma.user.findUnique({
-          where: { discordId: token.sub }
-        })
-        
-        if (user) {
-          session.user = {
-            id: user.id,
-            discordId: user.discordId,
-            username: user.username,
-            discriminator: user.discriminator,
-            avatarUrl: user.avatarUrl,
-            email: user.email,
-            subscriptionStatus: user.subscriptionStatus
+        try {
+          const userRef = doc(db, 'users', token.sub)
+          const userDoc = await getDoc(userRef)
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            session.user = {
+              id: userDoc.id,
+              discordId: userData.discordId,
+              username: userData.username,
+              discriminator: userData.discriminator,
+              avatarUrl: userData.avatarUrl,
+              email: userData.email,
+              subscriptionStatus: userData.subscriptionStatus
+            }
           }
+        } catch (error) {
+          console.error('Error fetching user:', error)
         }
       }
       return session

@@ -8,9 +8,12 @@ npm install
 ```
 
 ### 2. Setup Environment Variables
-Copy `.env.example` to `.env` and fill in your values:
+Create a `.env.local` file with your values:
 ```bash
-cp .env.example .env
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+NEXTAUTH_SECRET=generate_a_strong_random_key
+NEXTAUTH_URL=http://localhost:3000
 ```
 
 Get your Discord OAuth credentials from: https://discord.com/developers/applications
@@ -20,23 +23,16 @@ Generate NEXTAUTH_SECRET:
 openssl rand -base64 32
 ```
 
-### 3. Setup Database
-```bash
-npx prisma generate
-npx prisma migrate dev --name init
-```
-
-### 4. Run Development Server
+### 3. Run Development Server
 ```bash
 npm run dev
 ```
 
-### 5. Deploy to Vercel
+### 4. Deploy to Vercel
 
 1. Push your code to GitHub
 2. Import your repository in Vercel
 3. Add environment variables:
-   - `DATABASE_URL` (use Vercel Postgres or PlanetScale)
    - `DISCORD_CLIENT_ID`
    - `DISCORD_CLIENT_SECRET`
    - `NEXTAUTH_SECRET`
@@ -52,23 +48,20 @@ pages/
 │   │   └── [...nextauth].ts    # NextAuth configuration
 │   └── user.ts                  # User API endpoint
 ├── login.tsx                    # Login page
-├── dashboard.tsx                 # Protected dashboard
-└── _app.tsx                      # App wrapper with SessionProvider
-
-prisma/
-└── schema.prisma                 # Database schema
+├── dashboard.tsx               # Protected dashboard
+└── _app.tsx                     # App wrapper with SessionProvider
 
 lib/
-└── prisma.ts                     # Prisma client
+└── firebase.ts                  # Firebase initialization
 
 styles/
-└── globals.css                   # Global styles
+└── globals.css                  # Global styles
 ```
 
 ## Features
 
 - ✅ Discord OAuth2 authentication
-- ✅ User data stored in database
+- ✅ User data stored in Firestore
 - ✅ Session persistence
 - ✅ Protected routes
 - ✅ Auto-update user info on login
@@ -76,21 +69,17 @@ styles/
 - ✅ TypeScript support
 - ✅ Vercel deployment ready
 
-## Database Schema
+## Firestore Structure
 
-```prisma
-model User {
-  id                String   @id @default(cuid())
-  discordId         String   @unique
-  username          String
-  discriminator     String?
-  avatarUrl         String?
-  email             String?
-  subscriptionStatus Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-```
+The `users` collection stores user data with the following fields:
+- `discordId` - Unique Discord ID
+- `username` - Discord username
+- `discriminator` - Discord discriminator
+- `avatarUrl` - Discord avatar URL
+- `email` - User email
+- `subscriptionStatus` - Boolean subscription status
+- `createdAt` - Account creation timestamp
+- `updatedAt` - Last update timestamp
 
 ## API Endpoints
 
@@ -108,7 +97,6 @@ model User {
 ## Environment Variables
 
 ```env
-DATABASE_URL="your_database_url"
 DISCORD_CLIENT_ID="your_discord_client_id"
 DISCORD_CLIENT_SECRET="your_discord_client_secret"
 NEXTAUTH_SECRET="your_random_secret"
@@ -118,10 +106,9 @@ NEXTAUTH_URL="http://localhost:3000"
 ## Deployment
 
 For Vercel deployment:
-1. Use Vercel Postgres or PlanetScale for database
-2. Set all environment variables in Vercel dashboard
-3. Ensure `NEXTAUTH_URL` matches your domain
-4. Update Discord OAuth redirect URI to your Vercel URL
+1. Set all environment variables in Vercel dashboard
+2. Ensure `NEXTAUTH_URL` matches your domain
+3. Update Discord OAuth redirect URI to your Vercel URL
 
 ## Support
 
